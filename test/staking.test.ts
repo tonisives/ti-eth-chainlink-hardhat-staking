@@ -1,28 +1,32 @@
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers"
 import { assert } from "chai"
-import { BigNumber, Contract } from "ethers"
+import { BigNumber } from "ethers"
 import { deployments, ethers } from "hardhat"
+import { ERC20, RewardToken, Staking } from "../typechain-types"
 import { advanceBlocks, increaseTime } from "./utils/utils"
+
+const { moveBlocks } = require("./utils/move-blocks")
+const { moveTime } = require("./utils/move-time")
 
 const SECONDS_IN_A_DAY = 86400
 const SECONDS_IN_A_YEAR = 31449600
 
 describe("Staking Test", async function () {
-  let staking: Contract,
-    rewardToken: Contract,
+  let staking: Staking,
+    rewardToken: RewardToken,
     deployer: SignerWithAddress,
     stakeAmount: BigNumber,
-    dai: Contract
+    dai: ERC20
 
   beforeEach(async () => {
     const accounts = await ethers.getSigners()
     deployer = await accounts[0]
     // run all the deployments
-    await deployments.fixture(["all"])
+    await deployments.fixture(["mocks", "rewardtoken", "staking"])
     staking = await ethers.getContract("Staking")
     rewardToken = await ethers.getContract("RewardToken")
-    stakeAmount = ethers.utils.parseEther("100000")
     dai = await ethers.getContract("DAI")
+    stakeAmount = ethers.utils.parseEther("100000")
   })
 
   it("sets reward token address correctly", async () => {
@@ -30,19 +34,83 @@ describe("Staking Test", async function () {
     assert(response === rewardToken.address)
   })
 
-  it("Allows users to stake and claim rewards", async () => {
-    // approve staking contract to take tokens from reward token(from msg.sender balance)
+  it("returns 1 reward token based on time spent locked up", async () => {
     await rewardToken.approve(staking.address, stakeAmount)
+    await staking.stake(ethers.utils.parseEther("1"))
+    // need to call this to make the test work 🤔
+    await staking.earned(deployer.address)
+
+    // rewards are 100 tokens/s. Not sure why increseTime starts working after 1000 seconds only
+    await increaseTime(1000)
+    await advanceBlocks(1)
+
+    let endingEarned = await staking.earned(deployer.address)
+    console.log(endingEarned)
+
+    assert(endingEarned.eq(100000))
+
+    await increaseTime(2000)
+    await advanceBlocks(1)
+
+    endingEarned = await staking.earned(deployer.address)
+    assert(endingEarned.eq(300000))
+  })
+
+  it("moves tokens from the user to the staking contract", async () => {
+    // 1mil tokens on init
+    let initialBalance = await dai.balanceOf(deployer.address)
+
+    assert(initialBalance.eq(ethers.utils.parseEther((1e6).toString())))
+    const stakeAmount = ethers.utils.parseEther((5e5).toString())
+
+    await dai.approve(staking.address, stakeAmount)
     await staking.stake(stakeAmount)
-    const startingEarned = await staking.earned(deployer.address)
-    console.log(`Earned in start ${startingEarned}`)
 
-    increaseTime(SECONDS_IN_A_YEAR)
-    advanceBlocks(1)
+    let newBalance = await dai.balanceOf(deployer.address)
+    let contractBalance = await dai.balanceOf(staking.address)
 
-    const endingEarned = await staking.earned(deployer.address)
+    assert(newBalance.eq(stakeAmount))
+    assert(contractBalance.eq(stakeAmount))
+  })
 
-    assert(endingEarned > startingEarned)
-    console.log(`Earned in the end ${endingEarned}`)
+  it("can withdraw tokens", async () => {
+    // stake and withdraw.
+    // verify tokens returned to account
+    const stakeAmount = ethers.utils.parseEther((5e5).toString())
+
+    await dai.approve(staking.address, stakeAmount)
+    await staking.stake(stakeAmount)
+
+    const balanceAfterStake = await dai.balanceOf(deployer.address)
+
+    await increaseTime(SECONDS_IN_A_DAY)
+    await advanceBlocks(1)
+
+    const earned = await staking.earned(deployer.address)
+
+    await staking.withdraw(stakeAmount)
+    const balanceAfterWithdraw = await dai.balanceOf(deployer.address)
+    assert(balanceAfterStake.add(stakeAmount).eq(balanceAfterWithdraw))
+    assert(earned.toString() === "8600000")
+  })
+
+  it("can withdraw rewards", async () => {
+    // stake and claim rewards. verify reward tokens in user account
+    await rewardToken.approve(staking.address, ethers.constants.MaxUint256)
+    await dai.approve(staking.address, stakeAmount)
+    
+    await staking.stake(stakeAmount)
+
+    await increaseTime(SECONDS_IN_A_DAY)
+    await advanceBlocks(1)
+
+    const earned = await staking.earned(deployer.address)
+    console.log(earned.toString())
+    const rewardTokenBalanceBeforeWithdraw = await rewardToken.balanceOf(deployer.address)
+
+    await staking.claimReward()
+
+    const rewardTokenBalanceAfterWithdraw = await rewardToken.balanceOf(deployer.address)
+    assert(rewardTokenBalanceAfterWithdraw.sub(rewardTokenBalanceBeforeWithdraw).eq(86e5))
   })
 })

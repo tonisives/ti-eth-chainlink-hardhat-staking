@@ -8,14 +8,16 @@ const deployFunction: DeployFunction = async () => {
 
   // most recently deployed RewardToken contract
   const rewardToken = await ethers.getContract("RewardToken")
+  const dai = await ethers.getContract("DAI")
 
   // name of the contract: RewardToken
-  const stakingContract = await deploy("Staking", {
+  const staking = await deploy("Staking", {
     from: deployer,
+    // TODO: why are these the same here? shouldn't it be DAI?
     args: [rewardToken.address, rewardToken.address], // no constructor arguments
     log: true,
   })
 }
 
 export default deployFunction
-deployFunction.tags = ["all", "stakingContract"]
+deployFunction.tags = ["all", "staking"]
