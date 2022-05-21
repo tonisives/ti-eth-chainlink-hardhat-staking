@@ -5,8 +5,6 @@ import { deployments, ethers } from "hardhat"
 import { ERC20, RewardToken, Staking } from "../typechain-types"
 import { advanceBlocks, increaseTime } from "./utils/utils"
 
-const { moveBlocks } = require("./utils/move-blocks")
-const { moveTime } = require("./utils/move-time")
 
 const SECONDS_IN_A_DAY = 86400
 const SECONDS_IN_A_YEAR = 31449600
@@ -35,7 +33,7 @@ describe("Staking Test", async function () {
   })
 
   it("returns 1 reward token based on time spent locked up", async () => {
-    await rewardToken.approve(staking.address, stakeAmount)
+    await dai.approve(staking.address, stakeAmount)
     await staking.stake(ethers.utils.parseEther("1"))
     // need to call this to make the test work 🤔
     await staking.earned(deployer.address)
@@ -45,8 +43,7 @@ describe("Staking Test", async function () {
     await advanceBlocks(1)
 
     let endingEarned = await staking.earned(deployer.address)
-    console.log(endingEarned)
-
+    
     assert(endingEarned.eq(100000))
 
     await increaseTime(2000)
@@ -104,13 +101,8 @@ describe("Staking Test", async function () {
     await increaseTime(SECONDS_IN_A_DAY)
     await advanceBlocks(1)
 
-    const earned = await staking.earned(deployer.address)
-    console.log(earned.toString())
-    const rewardTokenBalanceBeforeWithdraw = await rewardToken.balanceOf(deployer.address)
-
     await staking.claimReward()
-
     const rewardTokenBalanceAfterWithdraw = await rewardToken.balanceOf(deployer.address)
-    assert(rewardTokenBalanceAfterWithdraw.sub(rewardTokenBalanceBeforeWithdraw).eq(86e5))
+    assert(rewardTokenBalanceAfterWithdraw.eq(86e5))
   })
 })
