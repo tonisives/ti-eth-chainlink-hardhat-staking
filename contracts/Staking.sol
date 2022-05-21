@@ -14,8 +14,8 @@ error Staking__NeedsMoreThanZero();
 
 contract Staking {
   // s = storage - expensive to read and write
-  IERC20 s_stakingToken;
-  IERC20 s_rewardToken;
+  IERC20 public s_stakingToken;
+  IERC20 public s_rewardToken;
 
   mapping(address => uint256) public s_balances;
   // a mapping of how much rewards each address currently has.
