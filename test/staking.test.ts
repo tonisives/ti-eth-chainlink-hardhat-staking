@@ -73,8 +73,6 @@ describe("Staking Test", async function () {
   it("can withdraw tokens", async () => {
     // stake and withdraw.
     // verify tokens returned to account
-    const stakeAmount = ethers.utils.parseEther((5e5).toString())
-
     await dai.approve(staking.address, stakeAmount)
     await staking.stake(stakeAmount)
 
