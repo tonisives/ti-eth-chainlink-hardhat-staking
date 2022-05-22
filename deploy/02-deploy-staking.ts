@@ -19,7 +19,7 @@ const deployFunction: DeployFunction = async () => {
     log: true,
   })
 
-  // put all reward tokens to the contract
+  // send all the reward tokens to the staking contract
   const totalRewardTokenSupply = await rewardToken.totalSupply()
   await rewardToken.approve(deployer, totalRewardTokenSupply)
   await rewardToken.transferFrom(deployer, staking.address, totalRewardTokenSupply)

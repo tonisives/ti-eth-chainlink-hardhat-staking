@@ -91,7 +91,6 @@ describe("Staking Test", async function () {
 
   it("can withdraw rewards", async () => {
     // stake and claim rewards. verify reward tokens in user account
-    await rewardToken.approve(staking.address, ethers.constants.MaxUint256)
     await dai.approve(staking.address, stakeAmount)
     
     await staking.stake(stakeAmount)
