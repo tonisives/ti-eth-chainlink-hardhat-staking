@@ -1,11 +1,14 @@
-import type { NextPage } from 'next'
-import styles from '../styles/Home.module.css'
+import { Stack } from "@mui/material"
+import type { NextPage } from "next"
+import { Header } from "../components/Header"
+import StakeDetails from "../components/StakeDetails"
 
 const Home: NextPage = () => {
   return (
-    <div className={styles.container}>
-        Hi!
-    </div>
+    <Stack p={"20px"} spacing={"20px"}>
+      <Header />
+      <StakeDetails />
+    </Stack>
   )
 }
 
