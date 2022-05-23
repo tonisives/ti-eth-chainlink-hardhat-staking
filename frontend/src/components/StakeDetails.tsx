@@ -2,7 +2,14 @@ import { Stack } from "@mui/material"
 import { BigNumber, ethers } from "ethers"
 import { useCallback, useEffect, useState } from "react"
 import { useMoralis, useWeb3Contract } from "react-moralis"
-import { daiAddress, erc20Abi, rewardTokenAbi, rewardTokenAddress, stakingAbi, stakingAddress } from "../constants/constants"
+import {
+  daiAddress,
+  erc20Abi,
+  rewardTokenAbi,
+  rewardTokenAddress,
+  stakingAbi,
+  stakingAddress
+} from "../constants/constants"
 import StakeForm from "./StakeForm"
 
 export default function StakeDetails() {
@@ -34,7 +41,7 @@ export default function StakeDetails() {
   const { runContractFunction: getStakeBalance } = useWeb3Contract({
     abi: stakingAbi,
     contractAddress: stakingAddress,
-    functionName: "s_balances",
+    functionName: "getStaked",
     params: {
       account: account,
     },
@@ -81,7 +88,7 @@ export default function StakeDetails() {
     setDaiBalance(daiBalance_)
 
     console.log(`get earned ${account}`)
-    
+
     const earnedContract =
       ((await getEarned({
         onError: (error) => {
@@ -91,15 +98,13 @@ export default function StakeDetails() {
 
     const earned_ = ethers.utils.formatUnits(earnedContract, "ether")
     setEarnedBalance(earned_)
-  }, [])
+  }, [account, getDaiBalance, getEarned, getRtBalance, getStakeBalance])
 
   useEffect(() => {
-    if (isWeb3Enabled && account) {  
-      console.log(`update ui values ${isWeb3Enabled} ${account}`)
-   
+    if (isWeb3Enabled && account) {
       updateUiValues()
     }
-  }, [updateUiValues, account, isWeb3Enabled, network])
+  }, [account, isWeb3Enabled, network, updateUiValues])
 
   return (
     <Stack spacing={"20px"}>
