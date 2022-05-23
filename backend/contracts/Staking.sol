@@ -55,7 +55,7 @@ contract Staking {
     s_rewardToken = IERC20(rewardToken);
   }
 
-  // how much the user has been paid already
+  // how much reward tokens the user currently has. 
   function earned(address user) public view returns (uint256) {
     uint256 currentBalance = s_balances[user];
     // updated in claimReward
@@ -130,5 +130,9 @@ contract Staking {
     // contract emits X tokens/second
     // disperses them to all token stakers, proprtionally to their staked amount
     //
+  }
+
+  function getStaked(address account) public view returns (uint256) {
+    return s_balances[account];
   }
 }

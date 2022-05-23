@@ -2,6 +2,10 @@
   "name": "staking",
   "version": "1.0.0",
   "private": true,
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
   "repository": "git@github.com:tonisives/ti-eth-chainlink-hardhat-staking.git",
   "author": "tonis <tonisives@gmail.com>",
   "license": "MIT",
