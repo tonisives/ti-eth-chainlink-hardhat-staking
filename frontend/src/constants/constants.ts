@@ -4,4 +4,4 @@ export const daiAddress = "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0"
 
 export const stakingAbi = require("./stakingAbi.json")
 export const rewardTokenAbi = require("./rewardTokenAbi.json")
-export const erc20Abi = require("./mockErc20Abi.json")
+export const erc20Abi = require("./erc20Abi.json")

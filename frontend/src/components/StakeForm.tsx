@@ -1,41 +1,38 @@
-import { Button, Stack, TextField } from "@mui/material"
-import { BigNumber, ethers } from "ethers"
+import { Alert, Button, Snackbar, Stack, TextField } from "@mui/material"
+import { ethers } from "ethers"
 import { useCallback, useEffect, useState } from "react"
 import { useMoralis, useWeb3Contract, Web3ExecuteFunctionParameters } from "react-moralis"
 import { daiAddress, erc20Abi, stakingAbi, stakingAddress } from "../constants/constants"
 
+let approveOptions: Web3ExecuteFunctionParameters = {
+  abi: erc20Abi,
+  contractAddress: daiAddress,
+  functionName: "approve",
+}
+
+let stakeOptions: Web3ExecuteFunctionParameters = {
+  abi: stakingAbi,
+  contractAddress: stakingAddress,
+  functionName: "stake",
+}
+
 export default function StakeForm() {
   const { account, isWeb3Enabled } = useMoralis()
   const [stakeAmount, setStakeAmount] = useState("0")
+  const [error, setError] = useState<String | undefined>(undefined)
 
-  let approveOptions: Web3ExecuteFunctionParameters = {
-    abi: erc20Abi,
-    contractAddress: daiAddress,
-    functionName: "approve",
-    params: {
-      amount: BigNumber.from("1000000"),
-      spender: stakingAddress,
-    },
-  }
-
-  let stakeOptions: Web3ExecuteFunctionParameters = {
-    abi: stakingAbi,
-    contractAddress: stakingAddress,
-    functionName: "stake",
-    params: {
-      amount: ethers.utils.parseEther(stakeAmount),
-    },
-  }
-
-
-  const updateUiValues = useCallback(async () => {
-    
-  }, [])
+  const updateUiValues = useCallback(async () => {}, [])
 
   const handleApproveSuccess = async () => {
+    stakeOptions.params = {
+      amount: ethers.utils.parseEther(stakeAmount),
+    }
+
     const tx = (await stakeCall({
-      onError: (error) => {
-        console.log(error)
+      params: stakeOptions,
+      onError: (txError) => {
+        console.log(txError)
+        setError(txError.message)
       },
     })) as any
     await tx.wait(1)
@@ -43,9 +40,16 @@ export default function StakeForm() {
   }
 
   const approveAndStake = async () => {
+    approveOptions.params = {
+      _value: ethers.utils.parseEther(stakeAmount),
+      _spender: stakingAddress,
+    }
+
     await approveCall({
-      onError: (error) => {
-        console.log(error)
+      params: approveOptions,
+      onError: (txError) => {
+        console.log(txError)
+        setError(txError.message)
       },
       onSuccess: () => {
         handleApproveSuccess()
@@ -78,6 +82,19 @@ export default function StakeForm() {
         >
           Stake
         </Button>
+        <Snackbar
+          open={error !== undefined}
+          autoHideDuration={5000}
+          onClose={() => setError(undefined)}
+          anchorOrigin={{
+            horizontal: "center",
+            vertical: "bottom",
+          }}
+        >
+          <Alert onClose={() => setError(undefined)} severity="error">
+            {error}
+          </Alert>
+        </Snackbar>
       </Stack>
     </>
   )

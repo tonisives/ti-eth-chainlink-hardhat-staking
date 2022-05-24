@@ -5,12 +5,16 @@ import StakeDetails from "./components/StakeDetails"
 
 const theme = createTheme({
   palette: {
-    mode: "light",
+    mode: "dark",
     primary: {
-      main: "#3f51b5",
+      main: "#90caf9",
     },
     secondary: {
-      main: "#f50057",
+      main: "#f48fb1",
+    },
+    background: {
+      default: "#212121",
+      paper: "#424242",
     },
   },
 })

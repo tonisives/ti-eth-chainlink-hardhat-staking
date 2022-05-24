@@ -18,7 +18,6 @@ export default function StakeDetails() {
   const [stakeBalance, setStakeBalance] = useState("0")
   const [earnedBalance, setEarnedBalance] = useState("0")
   const [daiBalance, setDaiBalance] = useState("0")
-  const [stakeAmount, setStakeAmount] = useState("0")
 
   const { runContractFunction: getRtBalance } = useWeb3Contract({
     abi: rewardTokenAbi,
@@ -34,7 +33,7 @@ export default function StakeDetails() {
     contractAddress: daiAddress,
     functionName: "balanceOf",
     params: {
-      account: account,
+      _owner: account,
     },
   })
 
@@ -87,8 +86,6 @@ export default function StakeDetails() {
     const daiBalance_ = ethers.utils.formatUnits(daiBalanceContract, "ether")
     setDaiBalance(daiBalance_)
 
-    console.log(`get earned ${account}`)
-
     const earnedContract =
       ((await getEarned({
         onError: (error) => {
@@ -98,7 +95,7 @@ export default function StakeDetails() {
 
     const earned_ = ethers.utils.formatUnits(earnedContract, "ether")
     setEarnedBalance(earned_)
-  }, [account, getDaiBalance, getEarned, getRtBalance, getStakeBalance])
+  }, [getDaiBalance, getEarned, getRtBalance, getStakeBalance])
 
   useEffect(() => {
     if (isWeb3Enabled && account) {
